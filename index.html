@@ -1,0 +1,301 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>雅涵今天吃什么？</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
+        }
+        
+        body {
+            background-color: #f5f5f5;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 600px;
+            background-color: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            padding: 30px;
+            text-align: center;
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2.2rem;
+        }
+        
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1rem;
+        }
+        
+        .result-box {
+            background-color: #fff8e1;
+            border-radius: 10px;
+            padding: 40px 20px;
+            margin: 20px 0;
+            min-height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #e65100;
+            transition: all 0.3s ease;
+        }
+        
+        .empty {
+            color: #999;
+            font-style: italic;
+        }
+        
+        .btn {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-size: 1.1rem;
+            border-radius: 50px;
+            cursor: pointer;
+            margin: 10px;
+            transition: all 0.3s ease;
+        }
+        
+        .btn:hover {
+            background-color: #45a049;
+            transform: translateY(-2px);
+        }
+        
+        .btn.reset {
+            background-color: #f44336;
+        }
+        
+        .btn.reset:hover {
+            background-color: #d32f2f;
+        }
+        
+        .custom-food {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px dashed #ddd;
+        }
+        
+        .food-input {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        input[type="text"] {
+            flex: 1;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+        
+        .food-list {
+            margin-top: 20px;
+            text-align: left;
+        }
+        
+        .food-list h3 {
+            margin-bottom: 10px;
+            color: #555;
+        }
+        
+        .food-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        
+        .food-tag {
+            background-color: #e3f2fd;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            color: #1976d2;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .remove-tag {
+            cursor: pointer;
+            font-weight: bold;
+            color: #999;
+        }
+        
+        .remove-tag:hover {
+            color: #f44336;
+        }
+        
+        @media (max-width: 480px) {
+            .container {
+                padding: 20px 15px;
+            }
+            
+            h1 {
+                font-size: 1.8rem;
+            }
+            
+            .result-box {
+                padding: 30px 15px;
+                font-size: 1.5rem;
+            }
+            
+            .btn {
+                width: 100%;
+                margin: 8px 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>雅涵今天吃什么？</h1>
+        <p class="subtitle">纠结症患者的救星，随机选择你的餐食</p>
+        
+        <div class="result-box empty" id="result">
+            点击下方按钮开始选择
+        </div>
+        
+        <div>
+            <button class="btn" id="chooseBtn">随机选择</button>
+            <button class="btn reset" id="resetBtn">重新选择</button>
+        </div>
+        
+        <div class="custom-food">
+            <h3>添加自定义食物</h3>
+            <div class="food-input">
+                <input type="text" id="foodInput" placeholder="输入食物名称...">
+                <button class="btn" id="addBtn">添加</button>
+            </div>
+            
+            <div class="food-list">
+                <h3>可选食物列表</h3>
+                <div class="food-tags" id="foodTags">
+                    <!-- 食物标签会在这里动态生成 -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 初始食物列表
+        let foodList = [
+            "火锅", "烧烤", "麻辣烫", "炸鸡", "寿司", 
+            "汉堡", "披萨", "牛肉面", "炒菜", "饺子",
+            "酸菜鱼", "烤肉", "冒菜", "沙县小吃", "黄焖鸡",
+            "米线", "麻辣烫", "包子", "粥", "沙拉"
+        ];
+        
+        const resultElement = document.getElementById('result');
+        const chooseBtn = document.getElementById('chooseBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const foodInput = document.getElementById('foodInput');
+        const addBtn = document.getElementById('addBtn');
+        const foodTags = document.getElementById('foodTags');
+        
+        // 渲染食物标签
+        function renderFoodTags() {
+            foodTags.innerHTML = '';
+            foodList.forEach((food, index) => {
+                const tag = document.createElement('div');
+                tag.className = 'food-tag';
+                tag.innerHTML = `
+                    ${food}
+                    <span class="remove-tag" data-index="${index}">×</span>
+                `;
+                foodTags.appendChild(tag);
+            });
+            
+            // 添加删除事件
+            document.querySelectorAll('.remove-tag').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const index = parseInt(e.target.dataset.index);
+                    foodList.splice(index, 1);
+                    renderFoodTags();
+                });
+            });
+        }
+        
+        // 随机选择食物
+        function chooseFood() {
+            if (foodList.length === 0) {
+                resultElement.textContent = "请先添加食物选项";
+                resultElement.classList.add('empty');
+                return;
+            }
+            
+            // 随机闪烁效果
+            let times = 0;
+            const interval = setInterval(() => {
+                const randomIndex = Math.floor(Math.random() * foodList.length);
+                resultElement.textContent = foodList[randomIndex];
+                resultElement.classList.remove('empty');
+                times++;
+                
+                if (times >= 20) {
+                    clearInterval(interval);
+                    // 最终结果
+                    const finalIndex = Math.floor(Math.random() * foodList.length);
+                    resultElement.textContent = foodList[finalIndex];
+                    
+                    // 添加选中动画
+                    resultElement.style.transform = "scale(1.1)";
+                    setTimeout(() => {
+                        resultElement.style.transform = "scale(1)";
+                    }, 300);
+                }
+            }, 100);
+        }
+        
+        // 重置选择
+        function resetChoose() {
+            resultElement.textContent = "点击下方按钮开始选择";
+            resultElement.classList.add('empty');
+        }
+        
+        // 添加食物
+        function addFood() {
+            const food = foodInput.value.trim();
+            if (food && !foodList.includes(food)) {
+                foodList.push(food);
+                foodInput.value = '';
+                renderFoodTags();
+            }
+        }
+        
+        // 事件监听
+        chooseBtn.addEventListener('click', chooseFood);
+        resetBtn.addEventListener('click', resetChoose);
+        addBtn.addEventListener('click', addFood);
+        
+        // 回车添加食物
+        foodInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                addFood();
+            }
+        });
+        
+        // 初始化渲染
+        renderFoodTags();
+    </script>
+</body>
+</html>
